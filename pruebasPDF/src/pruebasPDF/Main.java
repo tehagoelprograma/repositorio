@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -30,14 +31,19 @@ public class Main {
 
 
 
+	private static final String _01_JPG = "_01.jpg";
+	private static final String NOTIFICACIONES_CORREOS_900_VELOCIDAD_PDF = "Notificaciones correos 900 Velocidad.pdf";
+	private static final String NOTIFICACIONES_CORREOS_901_VELOCIDAD_PDF = "Notificaciones correos 901 Velocidad.pdf";
 	private static final String FOTOS = "\\PDFinput\\fotos\\";
 	private static final String FOTOS_REDIMENSIONADAS = "\\PDFinput\\fotos\\redimensionadas\\";
-	private static final String PDF_INPUT = "\\PDFinput";
-	private static final String PDF_ORIGEN = PDF_INPUT+"\\Notificaciones correos 900 Velocidad.pdf";
-	private static final String PDF_OUTPUT = "\\PDFoutput";
+	private static final String PDF_INPUT = "\\PDFinput\\";
+
+	private static final String PDF_OUTPUT = "\\PDFoutput\\";
+
 
 	private static int numFotos;
 	private static String path;
+	private static String PDF_ORIGEN;
 	private static String[] listadoMatriculas;
 
 
@@ -47,32 +53,70 @@ public class Main {
 
 			path = new File(".").getCanonicalPath();
 
-
+			obtenerPDForigen(); 
+			vaciarCarpetas(PDF_OUTPUT);
 			conectarConBBDD();
 			redimensionarImagenes();
 			writePDF();
+			vaciarCarpetas(FOTOS_REDIMENSIONADAS);
+			borrarFotosOrigen();
+			borrarPDFOrigen();
 
 
 		} catch (IOException e) {
-		
+
 			e.printStackTrace();
 		}
 	}
 
 
+
+
+
+	private static void obtenerPDForigen() {
+
+		File archivo = new File(path + PDF_INPUT + NOTIFICACIONES_CORREOS_900_VELOCIDAD_PDF);
+
+		if (archivo.exists()) {
+			PDF_ORIGEN = NOTIFICACIONES_CORREOS_900_VELOCIDAD_PDF;
+		}else {
+			//901
+			archivo = new File(path + PDF_INPUT + NOTIFICACIONES_CORREOS_901_VELOCIDAD_PDF);
+			if (archivo.exists()) {
+
+				PDF_ORIGEN =NOTIFICACIONES_CORREOS_901_VELOCIDAD_PDF;
+			} else {
+
+				JOptionPane.showMessageDialog(null, "No se ha encontrado el pdf de origen", 
+						"PDF no encontrado", JOptionPane.INFORMATION_MESSAGE);
+				System.exit(0);
+			}
+		}
+
+
+
+	}
+
+
+
+
+
+
+
+
 	private static void writePDF() {
 
-		String src = path + PDF_ORIGEN;
+		String src = path + PDF_INPUT +  PDF_ORIGEN;
 
-		Date hoy = new Date();	
-		DateFormat hourdateFormat = new SimpleDateFormat("ddMMyyyy-HHmmss");
+		//Date hoy = new Date();	
+		//DateFormat hourdateFormat = new SimpleDateFormat("ddMMyyyy-HHmmss");
 
-		String dest = path + PDF_OUTPUT + "\\estampado_" +  hourdateFormat.format(hoy) + ".pdf\\";
+		String dest = path + PDF_OUTPUT  + PDF_ORIGEN; // hourdateFormat.format(hoy) + ".pdf\\";
 
 		try {
 			manipulatePdf(src, dest);
 		} catch (IOException | DocumentException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -93,7 +137,7 @@ public class Main {
 		try {
 
 			Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-			Connection conn=DriverManager.getConnection("jdbc:ucanaccess://c:\\bbdd\\Nuevecita.mdb");
+			Connection conn=DriverManager.getConnection("jdbc:ucanaccess://"+ path + "\\Nuevecita.mdb");
 			Statement st = conn.createStatement();
 
 
@@ -103,7 +147,13 @@ public class Main {
 
 			while ( rs.next() )
 			{
-				ordenMatriculas[i] = rs.getObject(1).toString().replace("  -", "").trim();
+				if (Character.isSpaceChar(rs.getObject(1).toString().charAt(0))) {
+					ordenMatriculas[i] = rs.getObject(1).toString().replace("-", "").replace(" ", "");
+				} else {
+					ordenMatriculas[i] = rs.getObject(1).toString().replace(" ", "");
+				}
+
+
 				i++;
 			}
 
@@ -111,7 +161,7 @@ public class Main {
 
 
 		} catch (SQLException | ClassNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -130,46 +180,56 @@ public class Main {
 
 		for (int a = 0 ; a < numFotos ; a++) {
 
-			image = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + ".jpg");
-			PdfImage stream = new PdfImage(image, "", null);
+			File imagenExiste = new File (path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + ".jpg");
+			if (imagenExiste.exists()) {
+				
+				image = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + ".jpg");
 
-			stream.put(new PdfName("ITXT_SpecialId"), new PdfName("123456789"));
-			PdfIndirectObject ref = stamper.getWriter().addToBody(stream);
-			image.setDirectReference(ref.getIndirectReference());
-			image.setAbsolutePosition(30, 650);
-			PdfContentByte over = stamper.getOverContent(i);
-			over.addImage(image);
-			
-			
-			
-			imageRecorte = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + "_recorte.jpg");
-			PdfImage streamRecorte = new PdfImage(imageRecorte, "", null);
-			streamRecorte.put(new PdfName("ITXT_SpecialId2"), new PdfName("123456788"));
-			PdfIndirectObject refRecorte = stamper.getWriter().addToBody(streamRecorte);
-			imageRecorte.setDirectReference(refRecorte.getIndirectReference());
-			imageRecorte.setAbsolutePosition(30, 810);
-			//PdfContentByte overRecorte = stamper.getOverContent(i);
-			over.addImage(imageRecorte);
-			
-			imageMatricula = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + " - copia.jpg");
-			PdfImage streamMatricula = new PdfImage(imageMatricula, "", null);
-			streamMatricula.put(new PdfName("ITXT_SpecialId3"), new PdfName("123456787"));
-			PdfIndirectObject refMatricula = stamper.getWriter().addToBody(streamMatricula);
-			imageMatricula.setDirectReference(refMatricula.getIndirectReference());
-			imageMatricula.setAbsolutePosition(30, 560);
-			//PdfContentByte overRecorte = stamper.getOverContent(i);
-			over.addImage(imageMatricula);
-			
-			
-			
+
+				PdfImage stream = new PdfImage(image, "", null);
+
+				stream.put(new PdfName("ITXT_SpecialId"), new PdfName("123456789"));
+				PdfIndirectObject ref = stamper.getWriter().addToBody(stream);
+				image.setDirectReference(ref.getIndirectReference());
+				image.setAbsolutePosition(30, 647);
+				PdfContentByte over = stamper.getOverContent(i);
+				over.addImage(image);
+
+
+
+				imageRecorte = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + "_recorte.jpg");
+				PdfImage streamRecorte = new PdfImage(imageRecorte, "", null);
+				streamRecorte.put(new PdfName("ITXT_SpecialId2"), new PdfName("123456788"));
+				PdfIndirectObject refRecorte = stamper.getWriter().addToBody(streamRecorte);
+				imageRecorte.setDirectReference(refRecorte.getIndirectReference());
+				imageRecorte.setAbsolutePosition(30, 797);
+				//PdfContentByte overRecorte = stamper.getOverContent(i);
+				over.addImage(imageRecorte);
+
+			//	String matDetalle = obtenerDetalle(listadoMatriculas[a]);
+				
+				imageMatricula = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + _01_JPG);  // + matDetalle);
+				PdfImage streamMatricula = new PdfImage(imageMatricula, "", null);
+				streamMatricula.put(new PdfName("ITXT_SpecialId3"), new PdfName("123456787"));
+				PdfIndirectObject refMatricula = stamper.getWriter().addToBody(streamMatricula);
+				imageMatricula.setDirectReference(refMatricula.getIndirectReference());
+				imageMatricula.setAbsolutePosition(30, 558);
+				//PdfContentByte overRecorte = stamper.getOverContent(i);
+				over.addImage(imageMatricula);
+
+
+			}
 
 			i++;
 			i++; // para que se salte una pagina
-	
+
 		}
 		stamper.close();
 		reader.close();
 	}
+
+
+
 
 
 
@@ -201,7 +261,7 @@ public class Main {
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		
+
 		g.drawImage(bufferedImage, 0, 0, newW, newH, 0, 0, w, h, null);
 		g.dispose();
 
@@ -226,33 +286,103 @@ public class Main {
 
 	private static void redimensionarImagenes() {
 		File f = new File(path + FOTOS_REDIMENSIONADAS );
-		
-		
+
+
 		if (f.exists() ) f.delete(); else f.mkdir();
-		
-		
+
+
 		BufferedImage img, imgResized, imgMat, imgMatResized;
 		for (int i=0; i<numFotos ; i++) {
+			//comprobamos si existe
+			File imgAredimensionar = new File(path + FOTOS + listadoMatriculas[i] + ".jpg");
+			if (imgAredimensionar.exists() ) {
 
-			img = loadImage(path + FOTOS + listadoMatriculas[i] + ".jpg");
-			imgResized = resize(img, 279, 181);
-			saveImage(imgResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] + ".jpg" );
-			
-			recortar(img, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] + ".jpg");
-			
-			
-			imgMat = loadImage(path + FOTOS + listadoMatriculas[i] + " - copia.jpg");
-			imgMatResized = resize(imgMat, 279, 120);
-			saveImage(imgMatResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] +  " - copia.jpg" );
+				img = loadImage(path + FOTOS + listadoMatriculas[i] + ".jpg");
+				imgResized = resize(img, 279, 181);
+				saveImage(imgResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] + ".jpg" );
+
+				recortar(img, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] + ".jpg");
+
+
+				imgMat = loadImage(path + FOTOS + listadoMatriculas[i] + _01_JPG);
+				imgMatResized = resize(imgMat, 279, 120);
+				saveImage(imgMatResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] +  _01_JPG );
+			}
+		}
+	}
+
+
+	private static void recortar (BufferedImage bufferedImage, String pathName) {
+		BufferedImage recorte =  bufferedImage.getSubimage(0, 0, 1850, 90);
+		recorte = resize(recorte, 535, 30);
+		saveImage(recorte, pathName.replace(".jpg", "_recorte.jpg"));
+	} 
+
+
+	private static void vaciarCarpetas(String carpeta) {
+
+		File dir = new File(path + carpeta);
+		File[] archivos = dir.listFiles();
+
+		for (File archivo : archivos)
+			archivo.delete();
+
+
+	}
+
+
+
+	private static void borrarFotosOrigen() {
+
+		File dir = new File(path + FOTOS);
+
+		//si se ha generado el archivo podemos borrar las imagenes de entrada
+		if (dir != null && dir.list().length > 0 ) {
+			File[] archivos = dir.listFiles();
+
+			for (File archivo : archivos)
+				archivo.delete();
+
 		}
 	}
 	
 	
-	private static void recortar (BufferedImage bufferedImage, String pathName) {
-		BufferedImage recorte =  bufferedImage.getSubimage(0, 0, 1700, 90);
-		recorte = resize(recorte, 530, 30);
-		saveImage(recorte, pathName.replace(".jpg", "_recorte.jpg"));
-	} 
+	private static void borrarPDFOrigen() {
+		
+		File pdfOrig = new File(path + PDF_INPUT + PDF_ORIGEN);
+		pdfOrig.delete();
+			
+		}
+	
+	/**Si hay dos multas a la misma matricula en el futuro se puede usar este método para obtener el nombre del archivo detalle de la 
+	 * segunda multa. Actualmente en la BBDD solo aparece la misma matricula dos veces y no se puede establecer correspondencia.
+	 * Obtiene el nombre del archivo con el detalle de la matricula -NO SE USA
+	 * @param matricula
+	 * @return
+	 */
+		private static String  obtenerDetalle(String matricula) {
+
+			String detalle = matricula;
+			
+
+			if(matricula.contains("_")){
+				String sub=matricula.substring(matricula.length()-6, matricula.length()-4);
+
+				Integer i = Integer.valueOf(sub);
+				i++;
+				String res= "0"+Integer.toString(i)  ;
+
+				detalle = matricula.replace(sub , res);
+			} else {
+				detalle = detalle.replace(".jpg", _01_JPG);
+			}
+
+
+
+			return detalle;
+
+		}
+
 
 }
 

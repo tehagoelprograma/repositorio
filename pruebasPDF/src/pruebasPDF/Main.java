@@ -115,7 +115,10 @@ public class Main {
 
 		try {
 			manipulatePdf(src, dest);
-		} catch (IOException | DocumentException e) {
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		} catch (DocumentException e) {
 
 			e.printStackTrace();
 		}
@@ -160,7 +163,10 @@ public class Main {
 			numFotos = i;
 
 
-		} catch (SQLException | ClassNotFoundException e) {
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 
 			e.printStackTrace();
 		}
@@ -182,7 +188,7 @@ public class Main {
 
 			File imagenExiste = new File (path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + ".jpg");
 			if (imagenExiste.exists()) {
-				
+
 				image = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + ".jpg");
 
 
@@ -206,8 +212,8 @@ public class Main {
 				//PdfContentByte overRecorte = stamper.getOverContent(i);
 				over.addImage(imageRecorte);
 
-			//	String matDetalle = obtenerDetalle(listadoMatriculas[a]);
-				
+				//	String matDetalle = obtenerDetalle(listadoMatriculas[a]);
+
 				imageMatricula = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + _01_JPG);  // + matDetalle);
 				PdfImage streamMatricula = new PdfImage(imageMatricula, "", null);
 				streamMatricula.put(new PdfName("ITXT_SpecialId3"), new PdfName("123456787"));
@@ -333,55 +339,58 @@ public class Main {
 
 
 	private static void borrarFotosOrigen() {
+		int op = JOptionPane.showConfirmDialog(null, "El proceso ha finalizado, ¿Desea borrar las fotos?", "Confirmar borrado fotos", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		// 0=yes, 1=no, 2=cancel
+		if (op == 0) {
+			File dir = new File(path + FOTOS);
 
-		File dir = new File(path + FOTOS);
+			//si se ha generado el archivo podemos borrar las imagenes de entrada
+			if (dir != null && dir.list().length > 0 ) {
+				File[] archivos = dir.listFiles();
 
-		//si se ha generado el archivo podemos borrar las imagenes de entrada
-		if (dir != null && dir.list().length > 0 ) {
-			File[] archivos = dir.listFiles();
+				for (File archivo : archivos)
+					archivo.delete();
 
-			for (File archivo : archivos)
-				archivo.delete();
-
+			}
 		}
 	}
-	
-	
+
+
 	private static void borrarPDFOrigen() {
-		
+
 		File pdfOrig = new File(path + PDF_INPUT + PDF_ORIGEN);
 		pdfOrig.delete();
-			
-		}
-	
+
+	}
+
 	/**Si hay dos multas a la misma matricula en el futuro se puede usar este método para obtener el nombre del archivo detalle de la 
 	 * segunda multa. Actualmente en la BBDD solo aparece la misma matricula dos veces y no se puede establecer correspondencia.
 	 * Obtiene el nombre del archivo con el detalle de la matricula -NO SE USA
 	 * @param matricula
 	 * @return
 	 */
-		private static String  obtenerDetalle(String matricula) {
+	private static String  obtenerDetalle(String matricula) {
 
-			String detalle = matricula;
-			
-
-			if(matricula.contains("_")){
-				String sub=matricula.substring(matricula.length()-6, matricula.length()-4);
-
-				Integer i = Integer.valueOf(sub);
-				i++;
-				String res= "0"+Integer.toString(i)  ;
-
-				detalle = matricula.replace(sub , res);
-			} else {
-				detalle = detalle.replace(".jpg", _01_JPG);
-			}
+		String detalle = matricula;
 
 
+		if(matricula.contains("_")){
+			String sub=matricula.substring(matricula.length()-6, matricula.length()-4);
 
-			return detalle;
+			Integer i = Integer.valueOf(sub);
+			i++;
+			String res= "0"+Integer.toString(i)  ;
 
+			detalle = matricula.replace(sub , res);
+		} else {
+			detalle = detalle.replace(".jpg", _01_JPG);
 		}
+
+
+
+		return detalle;
+
+	}
 
 
 }

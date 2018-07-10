@@ -32,6 +32,8 @@ public class Main {
 
 
 	private static final String _01_JPG = "_01.jpg";
+	private static final String _02_JPG = "_02.jpg";
+	private static final String _03_JPG = "_03.jpg";
 	private static final String NOTIFICACIONES_CORREOS_900_VELOCIDAD_PDF = "Notificaciones correos 900 Velocidad.pdf";
 	private static final String NOTIFICACIONES_CORREOS_901_VELOCIDAD_PDF = "Notificaciones correos 901 Velocidad.pdf";
 	private static final String FOTOS = "\\PDFinput\\fotos\\";
@@ -56,6 +58,7 @@ public class Main {
 			obtenerPDForigen(); 
 			vaciarCarpetas(PDF_OUTPUT);
 			conectarConBBDD();
+			verMultasDobles();
 			redimensionarImagenes();
 			writePDF();
 			vaciarCarpetas(FOTOS_REDIMENSIONADAS);
@@ -67,6 +70,23 @@ public class Main {
 
 			e.printStackTrace();
 		}
+	}
+
+
+
+
+
+	private static void verMultasDobles() {
+		
+		
+		for (int i = 0 ; i < numFotos ; i++) {
+			for (int j = i+1 ; j < numFotos ; j++) {
+				if (listadoMatriculas[i].compareTo(listadoMatriculas[j]) == 0) {
+					listadoMatriculas[j]+="_02";
+				} 
+			}
+		}
+
 	}
 
 
@@ -150,7 +170,10 @@ public class Main {
 
 			while ( rs.next() )
 			{
-				if (Character.isSpaceChar(rs.getObject(1).toString().charAt(0))) {
+				
+				if ('C' == (rs.getObject(1).toString().charAt(0)) && !Character.isLetter(rs.getObject(1).toString().charAt(1))){
+					ordenMatriculas[i] = rs.getObject(1).toString().replace("-", "").replace(" ", "");
+				} else if (Character.isSpaceChar(rs.getObject(1).toString().charAt(0))) {
 					ordenMatriculas[i] = rs.getObject(1).toString().replace("-", "").replace(" ", "");
 				} else {
 					ordenMatriculas[i] = rs.getObject(1).toString().replace(" ", "");
@@ -213,8 +236,10 @@ public class Main {
 				over.addImage(imageRecorte);
 
 				//	String matDetalle = obtenerDetalle(listadoMatriculas[a]);
-
-				imageMatricula = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a] + _01_JPG);  // + matDetalle);
+				String cola = listadoMatriculas[a].endsWith("_02") ?
+						_03_JPG :
+							_01_JPG ;
+				imageMatricula = Image.getInstance(path + FOTOS_REDIMENSIONADAS + listadoMatriculas[a].replace("_02", "") + cola);  // + matDetalle);
 				PdfImage streamMatricula = new PdfImage(imageMatricula, "", null);
 				streamMatricula.put(new PdfName("ITXT_SpecialId3"), new PdfName("123456787"));
 				PdfIndirectObject refMatricula = stamper.getWriter().addToBody(streamMatricula);
@@ -302,6 +327,9 @@ public class Main {
 			//comprobamos si existe
 			File imgAredimensionar = new File(path + FOTOS + listadoMatriculas[i] + ".jpg");
 			if (imgAredimensionar.exists() ) {
+				String cola = listadoMatriculas[i].endsWith("_02") ?
+						_03_JPG :
+							_01_JPG ;
 
 				img = loadImage(path + FOTOS + listadoMatriculas[i] + ".jpg");
 				imgResized = resize(img, 279, 181);
@@ -310,9 +338,9 @@ public class Main {
 				recortar(img, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] + ".jpg");
 
 
-				imgMat = loadImage(path + FOTOS + listadoMatriculas[i] + _01_JPG);
+				imgMat = loadImage(path + FOTOS + listadoMatriculas[i].replace("_02", "") + cola);
 				imgMatResized = resize(imgMat, 279, 120);
-				saveImage(imgMatResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i] +  _01_JPG );
+				saveImage(imgMatResized, path + FOTOS_REDIMENSIONADAS + listadoMatriculas[i].replace("_02", "") + cola );
 			}
 		}
 	}
@@ -339,7 +367,7 @@ public class Main {
 
 
 	private static void borrarFotosOrigen() {
-		int op = JOptionPane.showConfirmDialog(null, "El proceso ha finalizado, ¿Desea borrar las fotos?", "Confirmar borrado fotos", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int op = JOptionPane.showConfirmDialog(null, "EL PROCESO HA FINALIZADO, ¿Desea borrar las fotos?", "Confirmar borrado fotos", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		// 0=yes, 1=no, 2=cancel
 		if (op == 0) {
 			File dir = new File(path + FOTOS);
@@ -357,9 +385,13 @@ public class Main {
 
 
 	private static void borrarPDFOrigen() {
+//		int op = JOptionPane.showConfirmDialog(null, "¿Desea borrar el PDF de origen?", "Confirmar borrado PDF Origen", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+//		// 0=yes, 1=no, 2=cancel
+//		if (op == 0) {
 
 		File pdfOrig = new File(path + PDF_INPUT + PDF_ORIGEN);
 		pdfOrig.delete();
+//		}
 
 	}
 

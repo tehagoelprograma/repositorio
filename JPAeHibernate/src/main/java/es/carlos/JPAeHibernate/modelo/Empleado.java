@@ -32,7 +32,7 @@ public class Empleado implements Serializable{
 	@Column
 	private LocalDate fechaNacimiento;
 	@OneToOne (cascade= {CascadeType.ALL}) //para que se inserten los objetos dependientes automaticamente, si no lo haces hay que persistirlos antes
-	@JoinColumn (name = "ID_DIRECCION")
+	@JoinColumn (name = "ID_DIRECCION") //empleado es el propietario de esta relacion, se añade a empleado una columna ID_DIRECCION que referencia a la otra
 	private Direccion direccion;
 	
 

@@ -21,7 +21,7 @@ public class Direccion {
 	
 	private String localidad;
 	
-	@OneToOne( mappedBy = "direccion", fetch=FetchType.LAZY)
+	@OneToOne( mappedBy = "direccion", fetch=FetchType.LAZY) //esto se le indica para que pueda volver desde direccion a empleado ( direccion no es la propietaria de la relaccion
 	private Empleado empleado;
 	
 	

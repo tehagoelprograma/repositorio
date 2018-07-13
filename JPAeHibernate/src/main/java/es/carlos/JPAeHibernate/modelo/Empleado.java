@@ -3,10 +3,14 @@ package es.carlos.JPAeHibernate.modelo;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table (name= "EMPLEADO")
@@ -21,23 +25,36 @@ public class Empleado implements Serializable{
 	@Column (name = "Cod_empleado")
 	private Long codigo;
 	
-	@Column
+
 	private String apellidos;
-	@Column
+
 	private String nombre;
 	@Column
-	private Date fechaNacimiento;
+	private LocalDate fechaNacimiento;
+	@OneToOne (cascade= {CascadeType.ALL}) //para que se inserten los objetos dependientes automaticamente, si no lo haces hay que persistirlos antes
+	@JoinColumn (name = "ID_DIRECCION")
+	private Direccion direccion;
 	
+
+
 	public Empleado() {
 		//necesario para Hibernate
 	}
 	
-	public Empleado(Long codigo, String apellidos, String nombre, Date fechaNacimiento) {
+	public Empleado(Long codigo, String apellidos, String nombre, LocalDate fechaNacimiento) {
 		
 		this.codigo = codigo;
 		this.apellidos = apellidos;
 		this.nombre = nombre;
 		this.fechaNacimiento = fechaNacimiento;
+	}
+	
+	public Direccion getDireccion() {
+		return direccion;
+	}
+
+	public void setDireccion(Direccion direccion) {
+		this.direccion = direccion;
 	}
 
 	public Long getCodigo() {
@@ -64,19 +81,21 @@ public class Empleado implements Serializable{
 		this.nombre = nombre;
 	}
 
-	public Date getFechaNacimiento() {
+	public LocalDate getFechaNacimiento() {
 		return fechaNacimiento;
 	}
 
-	public void setFechaNacimiento(Date fechaNacimiento) {
+	public void setFechaNacimiento(LocalDate fechaNacimiento) {
 		this.fechaNacimiento = fechaNacimiento;
 	}
 
 	@Override
 	public String toString() {
 		return "Empleado [codigo=" + codigo + ", apellidos=" + apellidos + ", nombre=" + nombre + ", fechaNacimiento="
-				+ fechaNacimiento + "]";
+				+ fechaNacimiento + ", direccion=" + direccion + "]";
 	}
+
+
 
 
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Param.html</title>
+</head>
+  <BODY BGCOLOR="#CCCCFF">
+  <P></P>
+  <H2>Introduce tus datos:</H2><BR>
+    <HR></HR>
+    <CENTER>
+	 <FORM NAME="FORM1" METHOD="POST"
+		ACTION="http://localhost:8080/EjemploServlets/ParamServlet"   enctype="multipart/form-data">
+	<!--  <TABLE BORDER>
+		<TR>
+		  <TD><B>Nombre:</TD>
+		  <TD><INPUT type=TEXTBOX NAME="NOM" SIZE="25" VALUE=""></TD>
+		</TR>
+		<TR>
+		  <TD><B>Edad:</TD>
+		  <TD><INPUT type=TEXTBOX NAME="EDA" SIZE="20" VALUE=""></TD>
+		</TR>
+	   </TABLE> -->  
+	   <P></P>
+	   <INPUT type=SUBMIT VALUE="Enviar">
+	   <HR></HR>
+	   
+	 <fieldset>
+        <legend>Formulario de subida</legend>
+        <input type="file" name="files" id="files" multiple/>
+       <!--   <button type="submit">Subir</button>    -->
+    </fieldset>
+	   Formulario HTML que invocará a un servlet
+         </FORM>
+      </CENTER>
+  </BODY>
+</HTML>

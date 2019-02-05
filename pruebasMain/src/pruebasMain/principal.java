@@ -2,6 +2,9 @@ package pruebasMain;
 
 public class principal {
 
+	private static String path;
+	
+	
 	public static void main(String[] args) {
 
 		//Padre.metodo();

@@ -14,7 +14,8 @@ public class principal {
 		
 		Padre objeto = new Hijo();
 		objeto.metodo();  //aunque el objeto es Hijo, al ser metodo estatico se invoca al del Padre
-		
+		Padre.metodo();
+		Hijo.metodo();
 		int a = 10;
 		System.out.println("");
 	}
